@@ -1,0 +1,6 @@
+localdata/
+*.jar
+zeebe-modeler-*/
+.vscode/
+.idea/
+*.iml

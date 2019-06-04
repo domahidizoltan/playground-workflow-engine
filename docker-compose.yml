@@ -1,0 +1,50 @@
+version: "3.6"
+
+services:
+  monitor_db:
+    image: oscarfonts/h2:1.4.197
+    container_name: monitor_db
+    ports:
+      - 1521:1521
+      - 81:81
+    volumes: 
+      - ./zeebe/start-monitor-db-and-alter-table.sh:/opt/h2/start-monitor-db-and-alter-table.sh
+    entrypoint: ./opt/h2/start-monitor-db-and-alter-table.sh
+
+  hazelcast:
+    image: hazelcast/hazelcast:3.11.4
+    container_name: hazelcast
+    ports:
+      - 5701:5701
+
+  zeebe:
+    image: camunda/zeebe:0.17.0
+    container_name: zeebe
+    ports:
+      - 26500:26500
+      - 26501:26501
+      - 26502:26502
+      - 26503:26503
+      - 26504:26504
+    environment:
+      - ZEEBE_LOG_LEVEL=debug
+    volumes: 
+      - ./zeebe/zeebe.cfg.toml:/usr/local/zeebe/conf/zeebe.cfg.toml
+      - ./zeebe/zeebe-simple-monitor-exporter-0.13.0.jar:/usr/local/zeebe/lib/zeebe-simple-monitor-exporter.jar
+      - ./zeebe/zeebe-hazelcast-exporter-0.2.0.jar:/usr/local/zeebe/lib/zeebe-hazelcast-exporter.jar
+    depends_on: 
+      - monitor_db
+      - hazelcast
+
+  zeebe-simple-monitor:
+    image: camunda/zeebe-simple-monitor:0.13.0
+    container_name: zeebe-simple-monitor
+    ports:
+      - 8080:8080
+    depends_on: 
+      - zeebe
+    environment:
+      - spring.jpa.hibernate.ddl-auto=create
+      - spring.datasource.url=jdbc:h2:tcp://monitor_db:1521/zeebe-monitor
+      - io.zeebe.monitor.connectionString=zeebe:26500
+      - io.zeebe.monitor.hazelcast.connection=hazelcast:5701
