@@ -1,6 +1,30 @@
 version: "3.6"
 
 services:
+  db:
+    image: postgres:9.6.13-alpine
+    container_name: db
+    environment:
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: stockprice
+    ports:
+      - 5432:5432
+    volumes:
+      - ./db/:/docker-entrypoint-initdb.d/
+      - ./localdata/postgresql/data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    ports:
+      - 8000:8080
+
+  mockserver:
+    image: stockprice-mockserver
+    container_name: mockserver
+    ports:
+      - 9000:9000
+
   monitor_db:
     image: oscarfonts/h2:1.4.197
     container_name: monitor_db

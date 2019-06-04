@@ -1,0 +1,3 @@
+server:
+    port: 9000
+    priceUrl: /api/company/real-time-price/
