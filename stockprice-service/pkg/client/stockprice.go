@@ -14,7 +14,7 @@ import (
 
 var baseUrl string
 func init() {
-	baseUrl = config.AppConfig.Client.StockPriceBaseUrl
+	baseUrl = config.AppConfig.Client.StockPrice.BaseUrl
 }
 
 type jsonData struct {
@@ -43,6 +43,7 @@ func (client StockPriceClient) FetchStockData(symbol string) {
 	defer resp.Body.Close()
 
 	stockdata := parse(resp.Body)
+	log.Println("Fetched", stockdata)
 	client.service.Save(stockdata)
 }
 

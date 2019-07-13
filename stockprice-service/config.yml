@@ -1,17 +1,29 @@
-server:
-    port: 9100
-
 db:
-    host: localhost
+  server:
+    host: "0.0.0.0"
     port: 5432
-    dbName: stockprice
-    user: postgres
-    password: pass
+  dbName: stockprice
+  user: postgres
+  password: pass
 
 client:
-    stockPriceBaseUrl: http://localhost:9000/api/company/real-time-price
+  stockPrice:
+    server:
+      host: "0.0.0.0"
+      port: 9000
+    baseUrl: /api/company/real-time-price
+
+zeebe:
+  server:
+    host: "0.0.0.0"
+    port: 26500
+
+http:
+  server:
+    host: "0.0.0.0"
+    port: 9100
 
 app:
-    default:
-        pageOffset: 0
-        pageLimit: 10
+  default:
+    pageOffset: 0
+    pageLimit: 10

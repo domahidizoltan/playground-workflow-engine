@@ -30,3 +30,15 @@ zbctl create worker shipment-service --handler cat &
 
 - Deploy `order-process.bpmn` or create instance by using:  
 `zbctl create instance order-process --variables '{"orderId": 12345}'`
+
+
+**First draft (stockprice-service)**
+- exec into zeebe container  
+```zbctl create worker analyze-trend --handler cat```
+
+- start stockprice-service  
+```go run cmd/main.go```
+
+- deploy temp.bpmn
+
+- create new instance with payload `{"symbol": "TEST"}`

@@ -3,27 +3,28 @@ package config
 import (
 	"os"
 	"log"
-	"strconv"
 	"strings"
+	"strconv"
 	"github.com/spf13/viper"
 )
 
 const configPath = "config.yml"
 
-type Config struct {
-	Server 
-	DB 
-	App 
-	Client client
+type Server struct {
+	Host, Port string
 }
 
-type Server struct {
-	Port string
+type Config struct {
+	DB 
+	Http
+	App 
+	Client
+	Zeebe
 }
 
 type DB struct {
-	Port int
-	Host, User, Password, DbName string
+	Server
+	User, Password, DbName string
 }
 
 type App struct {
@@ -34,21 +35,17 @@ type Default struct {
 	PageOffset, PageLimit int
 }
 
-type client struct {
-	StockPriceBaseUrl string
-}
-
-
 var AppConfig Config
 
 func init() {
 	loadConfig()
 
 	AppConfig = Config {
-		Server: getServerConfig(),
-		DB: getDBConfig(),
-		App: getAppConfig(),
-		Client: getClientConfig(),
+		DB: getDB(),
+		Http: GetHttp(),
+		App: getApp(),
+		Client: GetClient(),
+		Zeebe: GetZeebe(),
 	}
 }
 
@@ -65,37 +62,12 @@ func loadConfig() {
 	}
 }
 
-func getServerConfig() Server {
+func GetServer(path string) Server {
 	return Server {
-		Port: asString(viper.Get("server.port")),
+		Host: viper.Get(path + ".server.host").(string),
+		Port: asString(viper.Get(path + ".server.port")),
 	}
 }
-
-func getDBConfig() DB {
-	return DB {
-		Host: viper.Get("db.host").(string),
-		Port: viper.Get("db.port").(int),
-		User: viper.Get("db.user").(string),
-		Password: viper.Get("db.password").(string),
-		DbName: viper.Get("db.dbName").(string),
-	}
-}
-
-func getAppConfig() App {
-	return App {
-		Default: Default {
-			PageOffset: viper.Get("app.default.pageOffset").(int),
-			PageLimit: viper.Get("app.default.pageLimit").(int),	
-		},
-	}
-}
-
-func getClientConfig() client {
-	return client {
-		StockPriceBaseUrl: viper.Get("client.stockPriceBaseUrl").(string),
-	}
-}
-
 
 func asString(config interface{}) string {
 	var stringConfig string
@@ -106,4 +78,24 @@ func asString(config interface{}) string {
 	}
 
 	return stringConfig
+}
+
+func getDB() DB {
+	path := "db"
+	return DB {
+		Server: GetServer(path),
+		User: viper.Get(path + ".user").(string),
+		Password: viper.Get(path + ".password").(string),
+		DbName: viper.Get(path + ".dbName").(string),
+	}
+}
+
+func getApp() App {
+	path := "app"
+	return App {
+		Default: Default {
+			PageOffset: viper.Get(path + ".default.pageOffset").(int),
+			PageLimit: viper.Get(path + ".default.pageLimit").(int),	
+		},
+	}
 }

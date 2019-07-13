@@ -21,22 +21,12 @@ func Bootstrap(conf Config) Context {
 		StockDataService: stockprice.NewStockDataService(repo),
 	}
 
-	// x := context.StockDataService.GetLastByName("aa", 1)
-	// log.Println("last %v", x)
-
-	// data := stockprice.StockData {
-	// 	Name: "aa",
-	// 	Price: 12.34,
-	// 	Date: time.Now(),
-	// }
-	// newData := context.StockDataService.Save(data)
-	// log.Printf("saved %v", newData)
 	return context
 }
 
 func connectDB(config DB) *gorm.DB {
-	dbUrl := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", 
-	config.Host, config.Port, config.User, config.Password, config.DbName)
+	dbUrl := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", 
+	config.Server.Host, config.Server.Port, config.User, config.Password, config.DbName)
 	
 	db, err := gorm.Open("postgres", dbUrl)
 	if err != nil {
