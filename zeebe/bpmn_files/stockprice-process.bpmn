@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" id="Definitions_01notxd" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Zeebe Modeler" exporterVersion="0.6.2">
+  <bpmn:process id="TrendAnalyzer" isExecutable="true">
+    <bpmn:intermediateCatchEvent id="schedule-fetch" name="every 10s">
+      <bpmn:incoming>SequenceFlow_19jk0bf</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_13j23c5</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_07ik5j9</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_13j23c5</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT10S</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="fetch-stock-price" name="Fetch stock price">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="fetch-stock-price" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_07ik5j9</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_14ovyfx</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="alanyze-trend" name="Analyze trend">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="analyze-trend" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_14ovyfx</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_18be8fl</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_18be8fl" sourceRef="alanyze-trend" targetRef="decision-action" />
+    <bpmn:receiveTask id="buy" name="Buy">
+      <bpmn:incoming>SequenceFlow_18vbmqo</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0rgq8br</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:sequenceFlow id="SequenceFlow_18vbmqo" name="meanOfLast3 &#62;= buyLimit" sourceRef="decision-action" targetRef="buy">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">meanOfLast3 &gt;= buyLimit</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:receiveTask id="sell" name="Sell">
+      <bpmn:incoming>SequenceFlow_0oh8cdp</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0p78b3v</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0oh8cdp" name="meanOfLast3 &#60;= sellLimit&#10;" sourceRef="decision-action" targetRef="sell">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">meanOfLast3 &lt;= sellLimit</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:receiveTask id="stoploss" name="Stoploss">
+      <bpmn:incoming>SequenceFlow_03buwp3</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0kdrnyc</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:sequenceFlow id="SequenceFlow_03buwp3" name="meanOfLast3 &#60;= stoplossLimit" sourceRef="decision-action" targetRef="stoploss">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">meanOfLast3 &lt;= stoplossLimit</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="WorkflowFinishedTask">
+      <bpmn:incoming>SequenceFlow_0p78b3v</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0rgq8br</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0kdrnyc</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0p78b3v" sourceRef="sell" targetRef="WorkflowFinishedTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_0rgq8br" sourceRef="buy" targetRef="WorkflowFinishedTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_0kdrnyc" sourceRef="stoploss" targetRef="WorkflowFinishedTask" />
+    <bpmn:exclusiveGateway id="decision-action">
+      <bpmn:incoming>SequenceFlow_18be8fl</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_18vbmqo</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0oh8cdp</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_03buwp3</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:startEvent id="StartEvent_0klxo6o">
+      <bpmn:outgoing>SequenceFlow_19jk0bf</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_19jk0bf" sourceRef="StartEvent_0klxo6o" targetRef="schedule-fetch" />
+    <bpmn:sequenceFlow id="SequenceFlow_14ovyfx" sourceRef="fetch-stock-price" targetRef="alanyze-trend" />
+    <bpmn:sequenceFlow id="SequenceFlow_07ik5j9" sourceRef="schedule-fetch" targetRef="fetch-stock-price" />
+    <bpmn:sequenceFlow id="SequenceFlow_13j23c5" sourceRef="schedule-fetch" targetRef="schedule-fetch" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="TrendAnalyzer">
+      <bpmndi:BPMNShape id="IntermediateCatchEvent_10yotxj_di" bpmnElement="schedule-fetch">
+        <dc:Bounds x="229" y="221" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="203" y="282" width="49" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0khc10z_di" bpmnElement="fetch-stock-price">
+        <dc:Bounds x="333" y="199" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0qilfg5_di" bpmnElement="alanyze-trend">
+        <dc:Bounds x="514" y="199" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_18be8fl_di" bpmnElement="SequenceFlow_18be8fl">
+        <di:waypoint x="614" y="239" />
+        <di:waypoint x="669" y="239" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ReceiveTask_1vkg1ww_di" bpmnElement="buy">
+        <dc:Bounds x="861" y="81" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_18vbmqo_di" bpmnElement="SequenceFlow_18vbmqo">
+        <di:waypoint x="694" y="214" />
+        <di:waypoint x="694" y="121" />
+        <di:waypoint x="861" y="121" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="668" y="165" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ReceiveTask_1f90o82_di" bpmnElement="sell">
+        <dc:Bounds x="861" y="199" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0oh8cdp_di" bpmnElement="SequenceFlow_0oh8cdp">
+        <di:waypoint x="719" y="239" />
+        <di:waypoint x="861" y="239" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="749" y="221" width="82" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ReceiveTask_1yk7xiv_di" bpmnElement="stoploss">
+        <dc:Bounds x="861" y="309" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_03buwp3_di" bpmnElement="SequenceFlow_03buwp3">
+        <di:waypoint x="694" y="264" />
+        <di:waypoint x="694" y="349" />
+        <di:waypoint x="861" y="349" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="668" y="304" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_1qgxp7b_di" bpmnElement="WorkflowFinishedTask">
+        <dc:Bounds x="1097" y="221" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0p78b3v_di" bpmnElement="SequenceFlow_0p78b3v">
+        <di:waypoint x="961" y="239" />
+        <di:waypoint x="1097" y="239" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0rgq8br_di" bpmnElement="SequenceFlow_0rgq8br">
+        <di:waypoint x="961" y="121" />
+        <di:waypoint x="1029" y="121" />
+        <di:waypoint x="1029" y="239" />
+        <di:waypoint x="1097" y="239" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0kdrnyc_di" bpmnElement="SequenceFlow_0kdrnyc">
+        <di:waypoint x="961" y="349" />
+        <di:waypoint x="1029" y="349" />
+        <di:waypoint x="1029" y="239" />
+        <di:waypoint x="1097" y="239" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1lgoi9x_di" bpmnElement="decision-action" isMarkerVisible="true">
+        <dc:Bounds x="669" y="214" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_0klxo6o_di" bpmnElement="StartEvent_0klxo6o">
+        <dc:Bounds x="116" y="221" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_19jk0bf_di" bpmnElement="SequenceFlow_19jk0bf">
+        <di:waypoint x="152" y="239" />
+        <di:waypoint x="229" y="239" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_14ovyfx_di" bpmnElement="SequenceFlow_14ovyfx">
+        <di:waypoint x="433" y="239" />
+        <di:waypoint x="514" y="239" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_07ik5j9_di" bpmnElement="SequenceFlow_07ik5j9">
+        <di:waypoint x="265" y="239" />
+        <di:waypoint x="333" y="239" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_13j23c5_di" bpmnElement="SequenceFlow_13j23c5">
+        <di:waypoint x="247" y="257" />
+        <di:waypoint x="247" y="277" />
+        <di:waypoint x="209" y="277" />
+        <di:waypoint x="209" y="239" />
+        <di:waypoint x="229" y="239" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
