@@ -1,6 +1,7 @@
 module github.com/domahidizoltan/playground-workflow-engine/stockprice-service
 
 require (
+	github.com/golang/protobuf v1.3.2
 	github.com/gorilla/mux v1.7.2
 	github.com/jinzhu/gorm v1.9.8
 	github.com/kr/pretty v0.1.0 // indirect

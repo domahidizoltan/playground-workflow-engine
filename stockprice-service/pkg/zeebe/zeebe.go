@@ -10,7 +10,7 @@ import (
 	"github.com/zeebe-io/zeebe/clients/go/zbc"
 )
 
-const fetchStockPriceWorkerName = "fetch-stock-price"
+const jobTypeName = "fetch-stock-price"
 
 type zeebeClient struct {
 	stockpriceClient spClient.StockPriceClient
@@ -33,11 +33,15 @@ func InitAndStart(context config.Context) {
 		stockpriceClient: spClient.NewStockPriceClient(context.StockDataService),
 	}
 
-
-	jobWorker := client.NewJobWorker().JobType(fetchStockPriceWorkerName).Handler(handleJob).Open()
+	workerName := jobTypeName + ":" + config.AppConfig.Http.Server.Port
+	jobWorker := client.NewJobWorker().
+		JobType(jobTypeName).
+		Handler(handleJob).
+		Name(workerName).
+		Open()
 	defer jobWorker.Close()
 
-	log.Println("Worker " + fetchStockPriceWorkerName+ " started")
+	log.Println("Worker " + workerName + " started")
 	jobWorker.AwaitClose()
 }
 
