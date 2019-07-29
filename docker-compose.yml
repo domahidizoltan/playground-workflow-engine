@@ -6,13 +6,13 @@ services:
     container_name: db
     environment:
       POSTGRES_PASSWORD: pass
-      POSTGRES_DB: stockprice
+      POSTGRES_MULTIPLE_DATABASES: stockprice, trading
     ports:
       - 5432:5432
     volumes:
       - ./db/:/docker-entrypoint-initdb.d/
       - ./localdata/postgresql/data:/var/lib/postgresql/data
-
+  
   adminer:
     image: adminer
     container_name: adminer
