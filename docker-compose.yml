@@ -72,3 +72,9 @@ services:
       - spring.datasource.url=jdbc:h2:tcp://monitor_db:1521/zeebe-monitor
       - io.zeebe.monitor.connectionString=zeebe:26500
       - io.zeebe.monitor.hazelcast.connection=hazelcast:5701
+
+  redis:
+    image: redis:5.0.5-alpine
+    container_name: redis
+    ports:
+      - 6379:6379
