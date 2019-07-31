@@ -20,7 +20,11 @@ func (repo AccountConfigRepository) FindBy(username string) (AccountConfig, erro
 	err := repo.db.Table("account_configs").
 			Where("username = ?", username).
 			Scan(&data).Error
-	err = json.Unmarshal([]byte(data.LimitConfigString), &data.LimitConfig)
+
+	if len(data.LimitConfigString) > 0 {
+		err = json.Unmarshal([]byte(data.LimitConfigString), &data.LimitConfig)
+	}
+
 	return data, err
 }
 

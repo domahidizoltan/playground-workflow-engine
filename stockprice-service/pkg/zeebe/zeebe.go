@@ -1,13 +1,13 @@
 package zeebe
 
 import (
-	"log"
 	"github.com/domahidizoltan/playground-workflow-engine/stockprice-service/internal/config"
 	"github.com/domahidizoltan/playground-workflow-engine/stockprice-service/internal/stockprice"
 	spClient "github.com/domahidizoltan/playground-workflow-engine/stockprice-service/pkg/client"
 	"github.com/zeebe-io/zeebe/clients/go/entities"
 	"github.com/zeebe-io/zeebe/clients/go/worker"
 	"github.com/zeebe-io/zeebe/clients/go/zbc"
+	"log"
 )
 
 const jobTypeName = "fetch-stock-price"
@@ -26,11 +26,9 @@ func InitAndStart(context config.Context) {
 		panic(err)
 	}
 
-	log.Println("Zeebe client is running on port " + conf.Port)
-
 	zClient = zeebeClient {
 		stockdataService: context.StockDataService,
-		stockpriceClient: spClient.NewStockPriceClient(context.StockDataService),
+		stockpriceClient: spClient.NewStockPriceClient(),
 	}
 
 	workerName := jobTypeName + ":" + config.AppConfig.Http.Server.Port
@@ -55,7 +53,7 @@ func handleJob(client worker.JobClient, job entities.Job) {
 		return
 	}
 
-	variables["values"] = fetchAndGetLastValuesOfSymbol(variables["symbol"].(string))
+	variables["stockdata"] = fetchAndGetLastValuesOfSymbol(variables["symbol"].(string))
 	request, err := client.NewCompleteJobCommand().JobKey(jobKey).VariablesFromMap(variables)
 	if err != nil {
 		log.Println("Failed to set output fields")
@@ -72,9 +70,9 @@ func failJob(client worker.JobClient, job entities.Job) {
 	client.NewFailJobCommand().JobKey(job.GetKey()).Retries(job.Retries - 1).Send()
 }
 
-func fetchAndGetLastValuesOfSymbol(symbol string) []stockprice.StockData {
+func fetchAndGetLastValuesOfSymbol(symbol string) stockprice.StockData {
 	log.Println("Processing symbol:", symbol)
-	zClient.stockpriceClient.FetchStockData(symbol)
-	values := zClient.stockdataService.GetLatestBySymbol(symbol, 0, 9)
-	return values
+	stockdata := zClient.stockpriceClient.FetchStockData(symbol)
+	zClient.stockdataService.Save(stockdata)
+	return stockdata
 }

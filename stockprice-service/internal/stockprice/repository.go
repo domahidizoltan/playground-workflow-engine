@@ -16,7 +16,11 @@ func NewStockDataRepository(db *gorm.DB) StockDataRepository{
 
 func (repo StockDataRepository) GetLatestBySymbol(symbol string, offset int, limit int) []StockData {
 	var data []StockData
-	repo.db.Where("symbol = ?", symbol).Order("date desc").Offset(offset).Limit(limit).Find(&data)
+	repo.db.Where("symbol = ?", symbol).
+		Order("date desc").
+		Offset(offset).
+		Limit(limit).
+		Find(&data)
 	return data
 }
 

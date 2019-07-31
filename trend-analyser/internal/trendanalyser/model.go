@@ -1,10 +1,5 @@
 package trendanalyser
 
-import (
-	"time"
-)
-
-
 type Trend int
 
 const (
@@ -16,5 +11,4 @@ const (
 type StockData struct {
 	Symbol string	`json:"symbol"`
 	Price float32	`json:"price"`
-	Date time.Time	`json:"date"`
 }

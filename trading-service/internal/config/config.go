@@ -17,7 +17,6 @@ type Server struct {
 type Config struct {
 	DB 
 	Http
-	Client
 	Zeebe
 }
 
@@ -34,7 +33,6 @@ func init() {
 	AppConfig = Config {
 		DB: getDB(),
 		Http: GetHttp(),
-		Client: GetClient(),
 		Zeebe: GetZeebe(),
 	}
 }

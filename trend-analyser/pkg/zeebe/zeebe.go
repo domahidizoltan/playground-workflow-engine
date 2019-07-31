@@ -2,7 +2,6 @@ package zeebe
 
 import (
 	"log"
-	"encoding/json"
 	"github.com/domahidizoltan/playground-workflow-engine/trend-analyser/internal/config"
 	ta "github.com/domahidizoltan/playground-workflow-engine/trend-analyser/internal/trendanalyser"
 	"github.com/zeebe-io/zeebe/clients/go/entities"
@@ -25,7 +24,7 @@ func InitAndStart(context config.Context) {
 		panic(err)
 	}
 
-	zClient = zeebeClient {
+	zClient = zeebeClient{
 		trendAnalyser: context.TrendAnalyser,
 	}
 
@@ -50,28 +49,41 @@ func handleJob(client worker.JobClient, job entities.Job) {
 		return
 	}
 
-	stockdataString := variables["stockdata"].(string)
-	var data ta.StockData
-	json.Unmarshal([]byte(stockdataString), &data)
+	stockdata := variables["stockdata"]
+	data := toStockData(stockdata)
+	log.Printf("Received %v", data)
 	zClient.trendAnalyser.SetLastPrice(data.Symbol, data.Price)
 
+	variables["trend"] = nil
 	if zClient.trendAnalyser.IsReadyToAnalyse(data.Symbol) {
 		variables["trend"] = zClient.trendAnalyser.Analyse(data.Symbol)
 		log.Printf("Sending trend %v for %s", variables["trend"], data.Symbol)
 	}
 
 	request, err := client.NewCompleteJobCommand().JobKey(jobKey).VariablesFromMap(variables)
+
 	if err != nil {
 		log.Println("Failed to set output fields")
 		failJob(client, job)
 		return
 	}
 	request.Send()
-	
+
 	log.Println("Complete job", jobKey, "of type", job.Type)
 }
 
 func failJob(client worker.JobClient, job entities.Job) {
 	log.Println("Failed to complete job", job.GetKey())
 	client.NewFailJobCommand().JobKey(job.GetKey()).Retries(job.Retries - 1).Send()
+}
+
+func toStockData(stockdata interface{}) ta.StockData {
+	sd := stockdata.(map[string]interface{})
+	symbol, _ := sd["symbol"].(string)
+	price, _ := sd["price"].(float64)
+
+	return ta.StockData{
+		Symbol: symbol,
+		Price:  float32(price),
+	}
 }

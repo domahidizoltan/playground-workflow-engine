@@ -12,7 +12,6 @@ type AccountConfig struct {
 	LimitConfigString string			`json:"-" gorm:"column:limit_config"`
 }
 
-
 func createAccountConfig(username string) AccountConfig {
 	return AccountConfig {
 		Username: username,

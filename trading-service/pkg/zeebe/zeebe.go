@@ -2,18 +2,20 @@ package zeebe
 
 import (
 	"log"
+
 	"github.com/domahidizoltan/playground-workflow-engine/trading-service/internal/config"
 	"github.com/domahidizoltan/playground-workflow-engine/trading-service/internal/position"
+	sClient "github.com/domahidizoltan/playground-workflow-engine/trading-service/pkg/client"
 	"github.com/zeebe-io/zeebe/clients/go/entities"
 	"github.com/zeebe-io/zeebe/clients/go/worker"
 	"github.com/zeebe-io/zeebe/clients/go/zbc"
 )
 
-const buyJobTypeName = "buy-stock"
-const sellJobTypeName = "sell-stock"
+const buyJobTypeName = "buy-position"
+const sellJobTypeName = "sell-position"
 
 type zeebeClient struct {
-	client zbc.ZBClient
+	client          zbc.ZBClient
 	positionService position.PositionService
 }
 
@@ -26,10 +28,8 @@ func InitAndStart(context config.Context) {
 		panic(err)
 	}
 
-	log.Println("Zeebe client is running on port " + conf.Port)
-
-	zClient = zeebeClient {
-		client: client,
+	zClient = zeebeClient{
+		client:          client,
 		positionService: context.PositionService,
 	}
 
@@ -61,8 +61,8 @@ func handleBuyJob(client worker.JobClient, job entities.Job) {
 	}
 
 	username := variables["username"].(string)
-	symbol := variables["symbol"].(string)
-	if pos, e := zClient.positionService.Buy(username, symbol); e != nil {
+	data := toStockData(variables["stockdata"])
+	if pos, e := zClient.positionService.Buy(username, data); e != nil {
 		log.Printf("Could not buy position %v: %s", pos, e.Error())
 	}
 
@@ -72,7 +72,7 @@ func handleBuyJob(client worker.JobClient, job entities.Job) {
 		failJob(client, job)
 		return
 	}
-	
+
 	log.Println("Complete job", jobKey, "of type", job.Type)
 	request.Send()
 }
@@ -87,10 +87,11 @@ func handleSellJob(client worker.JobClient, job entities.Job) {
 		return
 	}
 
+	log.Printf("%v", variables)
 	username := variables["username"].(string)
-	symbol := variables["symbol"].(string)
-	if e := zClient.positionService.Sell(username, symbol); e != nil {
-		log.Printf("Could not sell position of %s: %s", symbol, e.Error())
+	data := toStockData(variables["stockdata"])
+	if e := zClient.positionService.Sell(username, data); e != nil {
+		log.Printf("Could not sell position of %s: %s", data.Symbol, e.Error())
 	}
 
 	request, err := client.NewCompleteJobCommand().JobKey(jobKey).VariablesFromMap(variables)
@@ -99,13 +100,23 @@ func handleSellJob(client worker.JobClient, job entities.Job) {
 		failJob(client, job)
 		return
 	}
-	
+
 	log.Println("Complete job", jobKey, "of type", job.Type)
 	request.Send()
 }
 
-
 func failJob(client worker.JobClient, job entities.Job) {
 	log.Println("Failed to complete job", job.GetKey())
 	client.NewFailJobCommand().JobKey(job.GetKey()).Retries(job.Retries - 1).Send()
+}
+
+func toStockData(stockdata interface{}) sClient.StockData {
+	sd := stockdata.(map[string]interface{})
+	symbol, _ := sd["symbol"].(string)
+	price, _ := sd["price"].(float64)
+
+	return sClient.StockData{
+		Symbol: symbol,
+		Price:  float32(price),
+	}
 }

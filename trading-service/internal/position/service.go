@@ -11,14 +11,12 @@ import (
 type PositionService struct {
 	repo PositionRepository
 	accountConfigService ac.AccountConfigService
-	stockPriceClient client.StockPriceClient
 }
 
-func NewPositionService(repository PositionRepository, accountConfigService ac.AccountConfigService, stockPriceClient client.StockPriceClient) PositionService {
+func NewPositionService(repository PositionRepository, accountConfigService ac.AccountConfigService) PositionService {
 	return PositionService {
 		repo: repository,
 		accountConfigService: accountConfigService,
-		stockPriceClient: stockPriceClient,
 	}
 }
 
@@ -30,29 +28,35 @@ func (service PositionService) GetPosition(username string, symbol string) (Posi
 	return service.repo.FindBy(username, symbol)
 }
 
-func (service PositionService) Buy(username string, symbol string) (Position, error) {
+func (service PositionService) Buy(username string, stockData client.StockData) (Position, error) {
 	var err error
 	var position Position
+	symbol := stockData.Symbol
+	log.Printf("Received %v to Buy for %s", stockData, username)
+
 	if _, e := service.repo.FindBy(username, symbol); !gorm.IsRecordNotFoundError(e) {
 		err = fmt.Errorf("%s already has an open position of %s", username, symbol)
 	} else {
 		accountConfig, e := service.getValidAccountConfig(username, symbol)
-		if e != nil {
-			stockData := service.stockPriceClient.FetchStockData(symbol)
+		if e == nil {
 			position, err = service.buyStock(accountConfig, symbol, stockData.Price)
 			log.Printf("Acquired position %v", position)
+		} else {
+			err = e
 		}
 	}
 
 	return position, err
 }
 
-func (service PositionService) Sell(username string, symbol string) error {
+func (service PositionService) Sell(username string, stockData client.StockData) error {
 	var err error
+	symbol := stockData.Symbol
+	log.Printf("Received %v to Sell for %s", stockData, username)
+
 	if position, e := service.repo.FindBy(username, symbol); e != nil {
 		err = fmt.Errorf("%s has no position of %s", username, symbol)
 	} else {
-		stockData := service.stockPriceClient.FetchStockData(symbol)
 		price := position.Quantity * stockData.Price
 		service.accountConfigService.Deposit(username, price)
 		service.repo.Delete(username, symbol)
@@ -72,7 +76,7 @@ func (service PositionService) getValidAccountConfig(username string, symbol str
 	}
 
 	if limitConfig, ok := accountConfig.LimitConfig[symbol]; !ok {
-		err = fmt.Errorf("%s has no configuration for stock %s", symbol)
+		err = fmt.Errorf("%s has no configuration for stock %s", username, symbol)
 	} else if limitConfig.BalanceLimit > accountConfig.Balance {
 		err = fmt.Errorf("%s configured balance limit %f exceeds current balance")
 	}

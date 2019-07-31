@@ -8,13 +8,11 @@ import (
 
 	ac "github.com/domahidizoltan/playground-workflow-engine/trading-service/internal/accountconfig"
 	"github.com/domahidizoltan/playground-workflow-engine/trading-service/internal/position"
-	"github.com/domahidizoltan/playground-workflow-engine/trading-service/pkg/client"
 )
 
 type Context struct {
 	AccountConfigService ac.AccountConfigService
 	PositionService position.PositionService
-	StockPriceClient client.StockPriceClient
 }
 
 func Bootstrap(conf Config) Context {
@@ -22,11 +20,10 @@ func Bootstrap(conf Config) Context {
 	accountConfigRepository := ac.NewAccountConfigRepository(db)
 	positionRepository := position.NewPositionRepository(db)
 	accountConfigService := ac.NewAccountConfigService(accountConfigRepository)
-	stockPriceClient := client.NewStockPriceClient()
 
 	context := Context {
 		AccountConfigService: accountConfigService,
-		PositionService: position.NewPositionService(positionRepository, accountConfigService, stockPriceClient),
+		PositionService: position.NewPositionService(positionRepository, accountConfigService),
 	}
 
 	return context

@@ -10,10 +10,10 @@ CREATE TABLE stock_data (
 \connect trading
 
 CREATE TABLE account_configs (
-  "id" serial NOT NULL,
   "username" character varying(64) NOT NULL,
   "balance" numeric(19,3) NOT NULL,
-  "limit_config" JSON DEFAULT NULL
+  "limit_config" character varying(1024),
+  CONSTRAINT "account_configs_username" UNIQUE ("username")
 );
 
 CREATE TABLE positions (

@@ -20,20 +20,16 @@ func init() {
 type jsonData struct {
 	Symbol string	`json:symbol`
 	Price float32	`json:price`
-	Date jsonTime	`json:"updated_at,string"`
+	Date jsonTime	`json:"date,string"`
 }
 
-type StockPriceClient struct {
-	service stockprice.StockDataService
+type StockPriceClient struct {}
+
+func NewStockPriceClient() StockPriceClient{
+	return StockPriceClient {}
 }
 
-func NewStockPriceClient(service stockprice.StockDataService) StockPriceClient{
-	return StockPriceClient {
-		service: service,
-	}
-}
-
-func (client StockPriceClient) FetchStockData(symbol string) {
+func (client StockPriceClient) FetchStockData(symbol string) stockprice.StockData {
 	stockSymbol := strings.ToUpper(symbol)
 	
 	resp, err := http.Get(baseUrl + "/" + stockSymbol)
@@ -44,7 +40,7 @@ func (client StockPriceClient) FetchStockData(symbol string) {
 
 	stockdata := parse(resp.Body)
 	log.Println("Fetched", stockdata)
-	client.service.Save(stockdata)
+	return stockdata
 }
 
 func parse(body io.Reader) stockprice.StockData {

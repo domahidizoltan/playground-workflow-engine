@@ -23,7 +23,6 @@ func (analyser TrendAnalyser) SetLastPrice(symbol string, price float32) {
 
 func (analyser TrendAnalyser) IsReadyToAnalyse(symbol string) bool {
 	size := analyser.repo.Size(symbol)
-	log.Printf("%d", size)
 	return size > 0 && size % 9 == 0
 }
 func (analyser TrendAnalyser) Analyse(symbol string) Trend {
@@ -36,7 +35,6 @@ func (analyser TrendAnalyser) analysePriceTrend(lastPrices []float32) Trend {
 	second := analyser.mean(lastPrices[3:5])
 	third := analyser.mean(lastPrices[6:8])
 
-	log.Printf("%f %f %f", first, second, third)
 	var trend Trend
 	switch {
 	case first*(1+threshold) < second && second*(1+threshold) < third:

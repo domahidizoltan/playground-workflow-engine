@@ -42,7 +42,12 @@ func (handler AccountConfigHandler) Withdraw(w http.ResponseWriter, r *http.Requ
 	username := mux.Vars(r)["username"]
 	amount := getFloatParam(r, "amount", 0.0)
 	err := handler.service.Withdraw(username, amount)
-	writeResponseOrError(w, err.Error, err)
+	
+	data := ""
+	if err != nil {
+		data = err.Error()
+	}
+	writeResponseOrError(w, data, err)
 }
 
 func (handler AccountConfigHandler) SetLimitConfig(w http.ResponseWriter, r *http.Request) {
